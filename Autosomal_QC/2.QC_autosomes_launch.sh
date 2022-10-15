@@ -86,12 +86,14 @@ fi
 
 ################################################# main ##############################################
 
-if [[ $second == "TRUE" ]] && [[ $pre_step_done != "TRUE" ]];
+if [[ $second == "TRUE" ]];
 ### if second iteration make sure to have the file ../7_samples_qc/manual.samples.to.exclude & ../7_samples_qc/labels_change.fam, created manually
 ## ../7_samples_qc/manual.samples.to.exclude  is a file with the samples to exclude resulting from intended duplicates, family relatedness, undintended duplicates and sex missmatches
 ## ../7_samples_qc/labels_change.fam: is a fam file form the last QCed folder (most likely 4_het) with the neccesary label changes resulting form the relatedness analysis
 ###  this will create the content of 0_pre form the manually corrected samples
 then
+  if [[ $pre_step_done != "TRUE" ]]; then
+
   for chr in {1..22} "XY"
     do
     cd ${GeneralQCDir}
@@ -102,6 +104,7 @@ then
     --out ${GeneralQCDir}/0_pre/chr_${chr}
     done
 
+    fi
 else
   ##################################################################################################
   ################-------------oxford file to plink files--------########################################
@@ -131,17 +134,19 @@ if [ ! -z ${parameters_file+x} ]; then
   cp ${parameters_file} "${GeneralQCDir}/parameters_file.sh"
 fi
 
-if [[ $second == "TRUE"] && [[ $sample_exclusion_done != "TRUE" ]];
-### if second iteration make sure to have the file ../manual.samples.to.exclude, this will create the content
-then
-  for chr in {1..22} "XY"
-    do
-    cd ${GeneralQCDir}
-    plink --bfile ../4_Het/chr_${chr} \
-    --remove ../manual.samples.to.exclude \
-    --make-bed \
-    --out ${GeneralQCDir}/0_pre/chr_${chr}
-    done
+if [ $second == "TRUE"]; then
+  if [[ $sample_exclusion_done != "TRUE" ]]; then
+    ### if second iteration make sure to have the file ../manual.samples.to.exclude, this will create the content
+
+      for chr in {1..22} "XY"
+        do
+        cd ${GeneralQCDir}
+        plink --bfile ../4_Het/chr_${chr} \
+        --remove ../manual.samples.to.exclude \
+        --make-bed \
+        --out ${GeneralQCDir}/0_pre/chr_${chr}
+        done
+    fi
 else
   ##################################################################################################
   ################-------------oxford file to plink files--------########################################
