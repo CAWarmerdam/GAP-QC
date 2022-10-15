@@ -126,7 +126,7 @@ else
   mv  ${GeneralQCDir}/0_pre/chr_X.* ${GeneralQCDir}/X_QC/
 fi
 
-if [ $second == "TRUE"]; then
+if [[ $second == "TRUE" ]]; then
   if [[ $sample_exclusion_done != "TRUE" ]]; then
     ### if second iteration make sure to have the file ../manual.samples.to.exclude, this will create the content
 
