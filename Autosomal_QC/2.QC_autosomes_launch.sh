@@ -33,6 +33,8 @@ call_rate_threshold_over_variants=0.03
 
 ### Variable for first or second iteration
 second="FALSE"
+pre_step_done="FALSE"
+sample_exclusion_done="FALSE"
 
 ### Code for an optional parameter file.
 
@@ -84,7 +86,7 @@ fi
 
 ################################################# main ##############################################
 
-if [ $second == "TRUE"  ];
+if [[ $second == "TRUE" ]] && [[ $pre_step_done != "TRUE" ]];
 ### if second iteration make sure to have the file ../7_samples_qc/manual.samples.to.exclude & ../7_samples_qc/labels_change.fam, created manually
 ## ../7_samples_qc/manual.samples.to.exclude  is a file with the samples to exclude resulting from intended duplicates, family relatedness, undintended duplicates and sex missmatches
 ## ../7_samples_qc/labels_change.fam: is a fam file form the last QCed folder (most likely 4_het) with the neccesary label changes resulting form the relatedness analysis
@@ -129,7 +131,7 @@ if [ ! -z ${parameters_file+x} ]; then
   cp ${parameters_file} "${GeneralQCDir}/parameters_file.sh"
 fi
 
-if [ $second == "TRUE"  ];
+if [[ $second == "TRUE"] && [[ $sample_exclusion_done != "TRUE" ]];
 ### if second iteration make sure to have the file ../manual.samples.to.exclude, this will create the content
 then
   for chr in {1..22} "XY"
