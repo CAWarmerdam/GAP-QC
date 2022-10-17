@@ -88,7 +88,7 @@ print(str(fam.table))
 print(str(info.table))
 
 # Matching sample IDs from ".fam" file info  file. Remove duplicate indicator
-if (is.null(mapping_table) & !(length(mapping_table) > 0)) {
+if (is.null(opt$mapping) & !(length(opt$mapping) > 0)) {
   info.table$sust<-gsub(info.table$V2,pattern=opt$pattern,replacement = "")
 } else {
   if (!file.exists(mapping_table)) {
