@@ -72,11 +72,17 @@ cat("[INFO]\t Reading input files")
 info.table <- fread(opt$info, data.table=F)
 fam.table <- fread(file = paste0(opt$plink,".fam"))
 
+print(head(fam.table))
+print(str(fam.table))
+print(str(info.table))
+
 # Matching sample IDs from ".fam" file info  file. Remove duplicate indicator
 fam.table$sust <- gsub(fam.table$V2,pattern="_[0-9]",replacement = "")
 info.table$sust<-gsub(info.table$V2,pattern="_[0-9]",replacement = "")
 # merge infor table with .fam file. 
 fam.table <- left_join(fam.table, info.table, by="sust")
+
+print(str(fam.table))
 
 ##organize file
 fam.table<-fam.table[,c(8,7,10:13,1)]

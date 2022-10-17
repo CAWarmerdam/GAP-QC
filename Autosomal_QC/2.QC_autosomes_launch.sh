@@ -368,7 +368,7 @@ ${GeneralQCDir}/5_Relatedness/proc/full_autosomal_rel.temp.bim > ${GeneralQCDir}
        --out ${GeneralQCDir}/5_Relatedness/proc/full_data
 
 ## create file to exclude intentionally duplicated samples
-Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ -r ${intended_dup_samples_file}
+Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ -r ${intended_dup_samples_file} -p "^OV\\d+"
 
 if [ $second != "TRUE"  ];
 then
