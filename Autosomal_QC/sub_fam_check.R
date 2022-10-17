@@ -104,8 +104,8 @@ if (is.null(opt$mapping) & !(length(opt$mapping) > 0)) {
     filter(GenotypeingID %in% fam.table$sust)
 
   info.table <- left_join(info.table, sample_id_mapping_cleaned, by=c("IID"="PedigreeID")) %>%
-    left_join(mapping, by=c("FATHER_ID"="PedigreeID"), suffix=c("", "_FATHER")) %>%
-    left_join(mapping, by=c("MOTHER_ID"="PedigreeID"), suffix=c("", "_MOTHER")) %>%
+    left_join(sample_id_mapping_cleaned, by=c("FATHER_ID"="PedigreeID"), suffix=c("", "_FATHER")) %>%
+    left_join(sample_id_mapping_cleaned, by=c("MOTHER_ID"="PedigreeID"), suffix=c("", "_MOTHER")) %>%
     mutate(
       IID = case_when(is.na(GenotypeingID) ~ IID, TRUE ~ GenotypeingID),
       sust = IID,
