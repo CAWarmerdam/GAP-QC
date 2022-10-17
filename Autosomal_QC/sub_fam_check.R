@@ -21,9 +21,9 @@ library(reshape)
 
 #########################################################################################################
 option_list = list(
-  make_option(c("-p", "--plink"), type="character", default=NULL, 
+  make_option(c("-p", "--plink"), type="character", default=NULL,
               help="Path to plink files index, it assumes a bed, bim and fam file with the same file name", metavar="character"),
-  
+
   make_option(c("-i", "--info"), type="character", default=NULL, 
               help="Phenotype and pedigree information file", metavar="character"),
   
@@ -45,7 +45,15 @@ option_list = list(
               help="TRUE if familial data is complete to create", metavar="character"),
   
   make_option(c("-w", "--workdir"), type="character", 
-              default="opt$out", help="processing directory", metavar="character")
+              default="opt$out", help="processing directory", metavar="character"),
+
+  make_option(c("-m", "--mapping"), type="character", default=NULL,
+              help="path to mapping to use between sample ids and ids used in genotypeing",
+              metavar="character"),
+
+  make_option(c("-P", "--pattern"), type="character", default="_[0-9]$",
+              help="pattern to remove from genotyping ids before performing matching (such as counters that are used to make duplicates unique)",
+              metavar="character")
 ); 
 
 opt_parser  <- OptionParser(option_list=option_list)
@@ -69,26 +77,51 @@ if (all(file.exists(paste0(opt$plink, c(".bim", ".fam", ".bed")))) == FALSE){
 }
 
 cat("[INFO]\t Reading input files")
-info.table <- fread(opt$info, data.table=F)
-fam.table <- fread(file = paste0(opt$plink,".fam"))
+fam_file_colnames <- c("FAM_ID", "IID", "FATHER_ID", "MOTHER_ID", "GENDER1M2F", "PHENO")
+info.table <- fread(opt$info, data.table=F, col.names=fam_file_colnames)
+fam.table <- fread(file = paste0(opt$plink,".fam"), col.names=fam_file_colnames)
+
+fam.table$sust <- gsub(fam.table$IID,pattern=opt$pattern, replacement = "")
 
 print(head(fam.table))
 print(str(fam.table))
 print(str(info.table))
 
 # Matching sample IDs from ".fam" file info  file. Remove duplicate indicator
-fam.table$sust <- gsub(fam.table$V2,pattern="_[0-9]",replacement = "")
-info.table$sust<-gsub(info.table$V2,pattern="_[0-9]",replacement = "")
-# merge infor table with .fam file. 
-fam.table <- left_join(fam.table, info.table, by="sust")
+if (is.null(mapping_table)) {
+  info.table$sust<-gsub(info.table$V2,pattern=opt$pattern,replacement = "")
+} else {
+  sample_id_mapping <- fread(opt$mapping, data.table=F, header=F, col.names= c("GenotypeingID", "PedigreeID"), colClasses=c("character", "character"))
+  sample_id_mapping_cleaned <- sample_id_mapping %>%
+    mutate(GenotypeingID = gsub(GenotypeingID, pattern=opt$pattern, replacement = "")) %>%
+    filter(GenotypeingID %in% fam.table$sust)
+
+  info.table <- left_join(info.table, sample_id_mapping_cleaned, by=c("IID"="PedigreeID")) %>%
+    left_join(mapping, by=c("FATHER_ID"="PedigreeID"), suffix=c("", "_FATHER")) %>%
+    left_join(mapping, by=c("MOTHER_ID"="PedigreeID"), suffix=c("", "_MOTHER")) %>%
+    mutate(
+      IID = case_when(is.na(GenotypeingID) ~ IID, TRUE ~ GenotypeingID),
+      sust = IID,
+      FATHER_ID = case_when(is.na(GenotypeingID_FATHER) ~ FATHER_ID,
+                            TRUE ~ GenotypeingID_FATHER),
+      MOTHER_ID = case_when(is.na(GenotypeingID_MOTHER) ~ MOTHER_ID,
+                            TRUE ~ GenotypeingID_MOTHER)) %>%
+  select(all_of(fam_file_colnames), sust)
+
+  print(str(sample_id_mapping_cleaned))
+  print(str(info.table))
+}
 
 print(str(fam.table))
 
-##organize file
-fam.table<-fam.table[,c(8,7,10:13,1)]
-names(fam.table)<-c("FAM_ID","IID","FATHER_PSEUDOID","MOTHER_PSEUDOID","GENDER1M2F","PARTNEREXT","IIDx")
-fam.table<-data.frame(fam.table)
-fam.table$PARTNEREXT<-sapply(fam.table$PARTNEREXT,function(x){ifelse(x==-9,0,x)})
+# merge infor table with .fam file.
+fam.table <- fam.table %>% select(sust) %>% left_join(info.table, by="sust") %>%
+  mutate(IID = sust,
+         PHENO = -9) %>%
+  select(all_of(fam_file_colnames)) %>%
+  as.data.frame()
+
+print(str(fam.table))
 
 ## If there are samples in the plink for which a "V2" is not assigned. Then we add complete this info in the fam file
 n.na.pseudoID <- sum(is.na(fam.table$FAM_ID))
@@ -97,24 +130,21 @@ if(n.na.pseudoID>=1){
       "samples from the .fam file are not present in the pairing.table, fake pedigree info will be introduce to assess this/these sample/s")
   
   na.pseudoID.index <- which(is.na(fam.table$FAM_ID))
-  fam.table[na.pseudoID.index,c("FATHER_PSEUDOID", "MOTHER_PSEUDOID", "GENDER1M2F", "PARTNEREXT")] <- data.frame(matrix(0, ncol= 4, nrow= n.na.pseudoID))
-  fam.table[na.pseudoID.index,c("IID", "FAM_ID")] <- cbind(fam.table[na.pseudoID.index,"IIDx"],fam.table[na.pseudoID.index,"IIDx"])
+  fam.table[na.pseudoID.index,c("FATHER_ID", "MOTHER_ID", "GENDER1M2F", "PHENO")] <- data.frame(matrix(0, ncol= 4, nrow= n.na.pseudoID))
+  fam.table[na.pseudoID.index,"FAM_ID"] <- fam.table[na.pseudoID.index,"IID"]
 }
 
-## If there are persons with an IID but no pedrigree info.
-n.na.pedigree <- sum(is.na(fam.table$FAM_ID))
-if(n.na.pedigree>=1){
-  cat("[WARNING] a total of", n.na.pedigree, 
-      "samples from the .fam file do not have pedigree information present in the pairing file")
-  
-  na.pedigree.index <- which(is.na(fam.table$FAM_ID))
-  
-  fam.table[na.pedigree.index,"FAM_ID"] <- fam.table[na.pedigree.index,"V2"]
-  fam.table[na.pedigree.index,c("FATHER_PSEUDOID", "MOTHER_PSEUDOID", "GENDER1M2F", "PARTNEREXT")] <- matrix(0, ncol= 4, nrow= n.na.pedigree)
+print(str(fam.table))
+
+n.na.pseudoID <- sum(is.na(fam.table$FAM_ID))
+if(n.na.pseudoID>=1){
+  cat("[WARNING] a total of", n.na.pseudoID,
+      "samples from the .fam file are not present in the pairing.table, fake pedigree info will be introduce to assess this/these sample/s")
 }
 
-#cols.for.new.fam <- c(9,8,10:12,6) ### order -> "FAM_ID", "V2", "FATHER_PSEUDOID", "MOTHER_PSEUDOID", "GENDER1M2F", "V6"
-new.fam <- cbind(fam.table[,c(1:5)],"V6"=rep(-9,nrow(fam.table)))
+  #cols.for.new.fam <- c(9,8,10:12,6) ### order -> "FAM_ID", "V2", "FATHER_PSEUDOID", "MOTHER_PSEUDOID", "GENDER1M2F", "V6"
+#new.fam <- cbind(fam.table[,c(1:5)],"V6"=rep(-9,nrow(fam.table)))
+new.fam <- fam.table
 
 #### create a new folder for outpur  -> copy input files for king -> change working directory to run king -> lounch king through system()
 new.fam.file <- file.path(opt$workdir,"batchinfo.fam")
