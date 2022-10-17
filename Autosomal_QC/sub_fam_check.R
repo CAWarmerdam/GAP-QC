@@ -88,9 +88,12 @@ print(str(fam.table))
 print(str(info.table))
 
 # Matching sample IDs from ".fam" file info  file. Remove duplicate indicator
-if (is.null(mapping_table)) {
+if (is.null(mapping_table) & !(length(mapping_table) > 0)) {
   info.table$sust<-gsub(info.table$V2,pattern=opt$pattern,replacement = "")
 } else {
+  if (!file.exists(mapping_table)) {
+    stop(paste0("[ERROR]\t Mapping file does not exist, input file:\n", opt$mapping, "\n"))
+  }
   sample_id_mapping <- fread(opt$mapping, data.table=F, header=F, col.names= c("GenotypeingID", "PedigreeID"), colClasses=c("character", "character"))
   sample_id_mapping_cleaned <- sample_id_mapping %>%
     mutate(GenotypeingID = gsub(GenotypeingID, pattern=opt$pattern, replacement = "")) %>%
