@@ -91,7 +91,7 @@ print(str(info.table))
 if (is.null(opt$mapping) & !(length(opt$mapping) > 0)) {
   info.table$sust<-gsub(info.table$V2,pattern=opt$pattern,replacement = "")
 } else {
-  if (!file.exists(mapping_table)) {
+  if (!file.exists(opt$mapping)) {
     stop(paste0("[ERROR]\t Mapping file does not exist, input file:\n", opt$mapping, "\n"))
   }
   sample_id_mapping <- fread(opt$mapping, data.table=F, header=F, col.names= c("GenotypeingID", "PedigreeID"), colClasses=c("character", "character"))
