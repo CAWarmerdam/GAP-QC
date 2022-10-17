@@ -78,8 +78,10 @@ if (all(file.exists(paste0(opt$plink, c(".bim", ".fam", ".bed")))) == FALSE){
 
 cat("[INFO]\t Reading input files")
 fam_file_colnames <- c("FAM_ID", "IID", "FATHER_ID", "MOTHER_ID", "GENDER1M2F", "PHENO")
-info.table <- fread(opt$info, data.table=F, col.names=fam_file_colnames)
-fam.table <- fread(file = paste0(opt$plink,".fam"), col.names=fam_file_colnames)
+info.table <- fread(opt$info, data.table=F, col.names=fam_file_colnames,
+                    colClasses=c("character", "character", "character", "character", "integer", "character"))
+fam.table <- fread(file = paste0(opt$plink,".fam"), col.names=fam_file_colnames,
+                   colClasses=c("character", "character", "character", "character", "integer", "character"))
 
 fam.table$sust <- gsub(fam.table$IID,pattern=opt$pattern, replacement = "")
 
@@ -94,7 +96,9 @@ if (is.null(opt$mapping) & !(length(opt$mapping) > 0)) {
   if (!file.exists(opt$mapping)) {
     stop(paste0("[ERROR]\t Mapping file does not exist, input file:\n", opt$mapping, "\n"))
   }
-  sample_id_mapping <- fread(opt$mapping, data.table=F, header=F, col.names= c("GenotypeingID", "PedigreeID"), colClasses=c("character", "character"))
+  sample_id_mapping <- fread(opt$mapping, data.table=F, header=F,
+                             col.names= c("GenotypeingID", "PedigreeID"),
+                             colClasses=c("character", "character"))
   sample_id_mapping_cleaned <- sample_id_mapping %>%
     mutate(GenotypeingID = gsub(GenotypeingID, pattern=opt$pattern, replacement = "")) %>%
     filter(GenotypeingID %in% fam.table$sust)
