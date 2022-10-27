@@ -36,6 +36,9 @@ second="FALSE"
 pre_step_done="FALSE"
 sample_exclusion_done="FALSE"
 
+sample_matching_pattern="_[0-9]$"
+separate_sample_id="FALSE"
+
 ### Code for an optional parameter file.
 
 # In order to use an optional parameter file,
@@ -368,7 +371,7 @@ ${GeneralQCDir}/5_Relatedness/proc/full_autosomal_rel.temp.bim > ${GeneralQCDir}
        --out ${GeneralQCDir}/5_Relatedness/proc/full_data
 
 ## create file to exclude intentionally duplicated samples
-Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ -r ${intended_dup_samples_file} -p "^OV\\d+"
+Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ -r ${intended_dup_samples_file} -p ${sample_matching_pattern}
 
 if [ $second != "TRUE"  ];
 then
