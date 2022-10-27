@@ -37,8 +37,8 @@ option_list = list(
 ); 
 
 opt_parser  <- OptionParser(option_list=option_list)
-opt <- parse_args(opt_parser)
-
+optq <- parse_args(opt_parser)
+  q
 if (is.null(opt$wd)){
   print_help(opt_parser)
   stop("At least one argument must be supplied as input path", call.=FALSE)
