@@ -47,11 +47,11 @@ option_list = list(
   make_option(c("-w", "--workdir"), type="character", 
               default="opt$out", help="processing directory", metavar="character"),
 
-  make_option(c("-m", "--mapping"), type="character", default=NULL, requred=F,
+  make_option(c("-m", "--mapping"), type="character", default=NULL,
               help="path to mapping to use between sample ids and ids used in genotypeing",
               metavar="character"),
 
-  make_option(c("-P", "--pattern"), type="character", default="_[0-9]$", required=F
+  make_option(c("-P", "--pattern"), type="character", default="_[0-9]$",
               help="pattern to remove from genotyping ids before performing matching (such as counters that are used to make duplicates unique)",
               metavar="character")
 ); 
