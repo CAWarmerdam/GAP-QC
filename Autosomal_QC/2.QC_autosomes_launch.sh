@@ -35,7 +35,6 @@ call_rate_threshold_over_variants=0.03
 second="FALSE"
 pre_step_done="FALSE"
 sample_exclusion_done="FALSE"
-
 sample_matching_pattern="_[0-9]$"
 
 ### Code for an optional parameter file.
@@ -384,7 +383,7 @@ else
 sourcefam=${GeneralQCDir}/5_Relatedness/proc/full_data
 fi
 
-if [ -z $genotype_to_sample_mapping+x} ]; then
+if [ -z ${genotype_to_sample_mapping+x} ]; then
   ### genetic family concordance
   Rscript ${codedir}/sub_fam_check.R \
   -p $sourcefam \
