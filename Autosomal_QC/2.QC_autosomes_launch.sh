@@ -37,7 +37,6 @@ pre_step_done="FALSE"
 sample_exclusion_done="FALSE"
 
 sample_matching_pattern="_[0-9]$"
-separate_sample_id="FALSE"
 
 ### Code for an optional parameter file.
 
@@ -385,15 +384,30 @@ else
 sourcefam=${GeneralQCDir}/5_Relatedness/proc/full_data
 fi
 
-### genetic family concordance
-Rscript ${codedir}/sub_fam_check.R \
--p $sourcefam \
--i ${pedigree_ref} \
- -k ${king_tool} \
- -C ${cranefoot_tool} \
- -w ${GeneralQCDir}/5_Relatedness/proc2/ \
- -M FALSE \
- -o ${GeneralQCDir}/plots/
+if [ -z $genotype_to_sample_mapping+x} ]; then
+  ### genetic family concordance
+  Rscript ${codedir}/sub_fam_check.R \
+  -p $sourcefam \
+  -i ${pedigree_ref} \
+   -k ${king_tool} \
+   -C ${cranefoot_tool} \
+   -w ${GeneralQCDir}/5_Relatedness/proc2/ \
+   -M FALSE \
+   -o ${GeneralQCDir}/plots/ \
+   -P ${sample_matching_pattern}
+else
+  ### genetic family concordance
+  Rscript ${codedir}/sub_fam_check.R \
+  -p $sourcefam \
+  -i ${pedigree_ref} \
+   -k ${king_tool} \
+   -C ${cranefoot_tool} \
+   -w ${GeneralQCDir}/5_Relatedness/proc2/ \
+   -M FALSE \
+   -o ${GeneralQCDir}/plots/ \
+   -P ${sample_matching_pattern} \
+   -m ${genotype_to_sample_mapping}
+ fi
 ### change M to TRUE to draw pedigrees, but be sure to have pairing file (-c)
 
 #remove temp files
@@ -467,7 +481,7 @@ plink  --bfile ${GeneralQCDir}/X_QC/1_CR80/chr_X.2 \
 
 #### NO SAMPLES are to be removed based on X chromosome call rate. 
 
-awk '$5>0.01 {print $2}' ${GeneralQCDir}/X_QC/1_CR80/chr_X.lmiss > ${GeneralQCDir}/X_QC/2_CR_high/extrhigh.vars
+awk -v threshold="${call_rate_threshold_over_variants}" '$5>threshold {print $2}' ${GeneralQCDir}/X_QC/1_CR80/chr_X.lmiss > ${GeneralQCDir}/X_QC/2_CR_high/extrhigh.vars
 
 ## exclude SNPs callrate>99
 plink --bfile ${GeneralQCDir}/X_QC/1_CR80/chr_X.2 \
