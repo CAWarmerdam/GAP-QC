@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --time=15:30:00
+#SBATCH --time=05:30:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=150G
 
 module load PLINK/1.9-beta6-20190617
 module load RPlus
-set -u
-set -e
+#set -u
+#set -e
 
 ### input and output variables
 ## make sure the samples have the same pairing IDs in all the files they appear in
@@ -80,7 +80,7 @@ mkdir -p "${GeneralQCDir}/MT_QC"
 if [ ! -z ${parameters_file+x} ]; then
   if [ -f "${GeneralQCDir}/parameters_file.sh" ]; then
     echo "parameter file already present"
-    exit 1
+    #exit 1
   fi
   cp ${parameters_file} "${GeneralQCDir}/parameters_file.sh"
 fi

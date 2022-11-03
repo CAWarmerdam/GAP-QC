@@ -91,8 +91,10 @@ print(str(info.table))
 
 
 # Matching sample IDs from ".fam" file info  file. Remove duplicate indicator
-if (is.null(opt$mapping) & !(length(opt$mapping) > 0)) {
-  info.table$sust<-gsub(info.table$V2,pattern=opt$pattern,replacement = "")
+if (is.null(opt$mapping) | !(length(opt$mapping) > 0)) {
+  message("[INFO] Not using mapping file")
+  info.table$sust<-gsub(info.table$IID,pattern=opt$pattern,replacement = "")
+  message(sprintf("[INFO] Cleaned IID using pattern '%s'", opt$pattern))
 } else {
   if (!file.exists(opt$mapping)) {
     stop(paste0("[ERROR]\t Mapping file does not exist, input file:\n", opt$mapping, "\n"))
@@ -129,6 +131,7 @@ fam.table <- fam.table %>% select(sust) %>% left_join(info.table, by="sust") %>%
   select(all_of(fam_file_colnames)) %>%
   as.data.frame()
 
+message("[INFO] tables joined")
 print(str(fam.table))
 
 ## If there are samples in the plink for which a "V2" is not assigned. Then we add complete this info in the fam file
@@ -153,6 +156,8 @@ if(n.na.pseudoID>=1){
   #cols.for.new.fam <- c(9,8,10:12,6) ### order -> "FAM_ID", "V2", "FATHER_PSEUDOID", "MOTHER_PSEUDOID", "GENDER1M2F", "V6"
 #new.fam <- cbind(fam.table[,c(1:5)],"V6"=rep(-9,nrow(fam.table)))
 new.fam <- fam.table
+
+message("[INFO] set new fam.")
 
 #### create a new folder for outpur  -> copy input files for king -> change working directory to run king -> lounch king through system()
 new.fam.file <- file.path(opt$workdir,"batchinfo.fam")
