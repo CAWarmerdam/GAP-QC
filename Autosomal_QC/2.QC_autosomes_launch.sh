@@ -369,7 +369,8 @@ ${GeneralQCDir}/5_Relatedness/proc/full_autosomal_rel.temp.bim > ${GeneralQCDir}
        --out ${GeneralQCDir}/5_Relatedness/proc/full_data
 
 ## create file to exclude intentionally duplicated samples
-Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ -r ${intended_dup_samples_file} -p ${sample_matching_pattern}
+Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ \
+-r ${intended_dup_samples_file} -p ${sample_matching_pattern}
 
 if [ $second != "TRUE"  ];
 then
@@ -521,7 +522,7 @@ grep -E 'Non concordant|Failed'  ${GeneralQCDir}/X_QC/sex_check/all.samples.conc
        
 
 ## filter also the cohort by common snps
- plink --bfile ${GeneralQCDir}/5_Relatedness/proc/full_data.no.dup \
+ plink --bfile ${sourcefam} \
        --extract ${commonSNPs}  \
        --make-bed \
        --out ${GeneralQCDir}/6_PCA/proc2/allchr_join
