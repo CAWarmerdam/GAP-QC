@@ -287,8 +287,8 @@ plink --bfile ${GeneralQCDir}/2_CR_high/chr_${chr}.2 \
 --out ${GeneralQCDir}/3_MAF_HWE/chr_${chr}
 
 awk '$9<0.000001 {print $2}' ${GeneralQCDir}/3_MAF_HWE/chr_${chr}.hwe|sort > ${GeneralQCDir}/3_MAF_HWE/highhw_${chr}.temp
-awk '$5==0 {print $2}' ${GeneralQCDir}/3_MAF_HWE/chr_${chr}.frq|sort > ${GeneralQCDir}/3_MAF_HWE/zeroMAF_${chr}.temp
-cat ${GeneralQCDir}/3_MAF_HWE/highhw_${chr}.temp ${GeneralQCDir}/3_MAF_HWE/zeroMAF_${chr}.temp  > ${GeneralQCDir}/3_MAF_HWE/extr_${chr}hw
+#awk '$5==0 {print $2}' ${GeneralQCDir}/3_MAF_HWE/chr_${chr}.frq|sort > ${GeneralQCDir}/3_MAF_HWE/zeroMAF_${chr}.temp
+cat ${GeneralQCDir}/3_MAF_HWE/highhw_${chr}.temp > ${GeneralQCDir}/3_MAF_HWE/extr_${chr}hw
 rm ${GeneralQCDir}/3_MAF_HWE/*.temp
 done
 cat ${GeneralQCDir}/3_MAF_HWE/extr_*hw> ${GeneralQCDir}/3_MAF_HWE/excl_HW.snps
