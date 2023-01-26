@@ -13,7 +13,7 @@ module load RPlus
 ## make sure the samples have the same pairing IDs in all the files they appear in
 InputDir="" ##directory with the location for gen-sample files
 GeneralQCDir=""  ##name & allocate your results directory
-codedir="" ##allocate your scripts directory 
+codedir="" ##allocate your scripts directory
 
 ### Reference files
 intended_dup_samples_file="" ### file with intentional duplicates in the genotyping process (make sure it's without header, and the format is [samplename]_[0-9]). Be sire to include all duplicates, otherwise KING will fail
@@ -30,6 +30,9 @@ cranefoot_tool="" ## exact location of the Cranefoot executable
 ### Call rate missingness settings (for final pass, initial pass is 20% missingness)
 call_rate_threshold_over_samples=0.03
 call_rate_threshold_over_variants=0.03
+
+### Filtering monomorphic variants?
+keep_monomorphic_variants="FALSE"
 
 ### Variable for first or second iteration
 second="FALSE"
@@ -287,8 +290,14 @@ plink --bfile ${GeneralQCDir}/2_CR_high/chr_${chr}.2 \
 --out ${GeneralQCDir}/3_MAF_HWE/chr_${chr}
 
 awk '$9<0.000001 {print $2}' ${GeneralQCDir}/3_MAF_HWE/chr_${chr}.hwe|sort > ${GeneralQCDir}/3_MAF_HWE/highhw_${chr}.temp
-#awk '$5==0 {print $2}' ${GeneralQCDir}/3_MAF_HWE/chr_${chr}.frq|sort > ${GeneralQCDir}/3_MAF_HWE/zeroMAF_${chr}.temp
+awk '$5==0 {print $2}' ${GeneralQCDir}/3_MAF_HWE/chr_${chr}.frq|sort > ${GeneralQCDir}/3_MAF_HWE/zeroMAF_${chr}.temp
 cat ${GeneralQCDir}/3_MAF_HWE/highhw_${chr}.temp > ${GeneralQCDir}/3_MAF_HWE/extr_${chr}hw
+
+if [ $keep_monomorphic_variants == "FALSE" ];
+then
+  echo "Removing monomorphic markers"
+  cat ${GeneralQCDir}/3_MAF_HWE/zeroMAF_${chr}.temp >> ${GeneralQCDir}/3_MAF_HWE/extr_${chr}hw
+fi
 rm ${GeneralQCDir}/3_MAF_HWE/*.temp
 done
 cat ${GeneralQCDir}/3_MAF_HWE/extr_*hw> ${GeneralQCDir}/3_MAF_HWE/excl_HW.snps
