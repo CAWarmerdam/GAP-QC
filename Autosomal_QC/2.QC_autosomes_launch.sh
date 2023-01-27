@@ -112,22 +112,25 @@ then
 else
   ##################################################################################################
   ################-------------oxford file to plink files--------########################################
-  log="${GeneralQCDir}/0_pre/log/"
-  mkdir -p  ${log}
-  for chr in {1..22} "XY" "X" "MT"
-    do
-    sbatch -J "ox2plink.${chr}" \
-    -o "${log}/ox2plink.${chr}.out" \
-    -e "${log}/ox2plink.${chr}.err" \
-    -v ${codedir}/sub1.gensample_to_plink.sh \
-    ${GeneralQCDir}/0_pre/ \
-    ${InputDir} \
-    ${chr}
-    done
-    ### move haploid cromodomes out
-  mv  ${GeneralQCDir}/0_pre/chr_Y.* ${GeneralQCDir}/Y_QC/
-  mv  ${GeneralQCDir}/0_pre/chr_MT.* ${GeneralQCDir}/MT_QC/
-  mv  ${GeneralQCDir}/0_pre/chr_X.* ${GeneralQCDir}/X_QC/
+  if [[ $pre_step_done != "TRUE" ]]; then
+    log="${GeneralQCDir}/0_pre/log/"
+    mkdir -p  ${log}
+    for chr in {1..22} "XY" "X" "MT"
+      do
+      sbatch -J "ox2plink.${chr}" \
+      -o "${log}/ox2plink.${chr}.out" \
+      -e "${log}/ox2plink.${chr}.err" \
+      -v ${codedir}/sub1.gensample_to_plink.sh \
+      ${GeneralQCDir}/0_pre/ \
+      ${InputDir} \
+      ${chr}
+      done
+
+      ### move haploid cromodomes out
+    mv  ${GeneralQCDir}/0_pre/chr_Y.* ${GeneralQCDir}/Y_QC/
+    mv  ${GeneralQCDir}/0_pre/chr_MT.* ${GeneralQCDir}/MT_QC/
+    mv  ${GeneralQCDir}/0_pre/chr_X.* ${GeneralQCDir}/X_QC/
+  fi
 fi
 
 if [[ $second == "TRUE" ]]; then
@@ -337,8 +340,8 @@ plink --het \
 --out ${GeneralQCDir}/4_Het/autosomal
 #erase temp files 
 rm ${GeneralQCDir}/4_Het/proc/*temp*
-  #retrieve Call rate information from samples
-  cat ${GeneralQCDir}/2_CR_high/chr_*.incl_CR_sam> ${GeneralQCDir}/4_Het/CR.samples
+#retrieve Call rate information from samples
+cat ${GeneralQCDir}/2_CR_high/chr_*.incl_CR_sam> ${GeneralQCDir}/4_Het/CR.samples
 rm ${GeneralQCDir}/2_CR_high/chr_*.incl_CR_sam
 if [ $second == "TRUE"  ];
 ## create file with samples to exclude (het>4sd) and heterozygosity density plot
@@ -372,10 +375,10 @@ awk '{if ($1 == 6 && $4 >= 28477797 && $4 <= 35000000) print $2}' \
 ${GeneralQCDir}/5_Relatedness/proc/full_autosomal_rel.temp.bim > ${GeneralQCDir}/5_Relatedness/proc/HLAexclude.txt
 
 ## apply filters to reduce SNP number
- plink --bfile ${GeneralQCDir}/5_Relatedness/proc/full_autosomal_rel.temp \
-       --exclude ${GeneralQCDir}/5_Relatedness/proc/HLAexclude.txt \
-       --make-bed \
-       --out ${GeneralQCDir}/5_Relatedness/proc/full_data
+plink --bfile ${GeneralQCDir}/5_Relatedness/proc/full_autosomal_rel.temp \
+     --exclude ${GeneralQCDir}/5_Relatedness/proc/HLAexclude.txt \
+     --make-bed \
+     --out ${GeneralQCDir}/5_Relatedness/proc/full_data
 
 ## create file to exclude intentionally duplicated samples
 Rscript ${codedir}/sub_sample_duplicates.R -w ${GeneralQCDir}/5_Relatedness/proc/ \
@@ -395,6 +398,7 @@ fi
 
 if [ -z ${genotype_to_sample_mapping+x} ]; then
   ### genetic family concordance
+  echo "mapping file not present"
   Rscript ${codedir}/sub_fam_check.R \
   -p $sourcefam \
   -i ${pedigree_ref} \
@@ -406,6 +410,7 @@ if [ -z ${genotype_to_sample_mapping+x} ]; then
    -P ${sample_matching_pattern}
 else
   ### genetic family concordance
+  echo "mapping file present"
   Rscript ${codedir}/sub_fam_check.R \
   -p $sourcefam \
   -i ${pedigree_ref} \
